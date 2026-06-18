@@ -1,0 +1,16 @@
+# Development Environment Configuration
+environment: dev
+
+s3:
+  input_bucket: "datalakebg-dev"
+  input_path: "s3://datalakebg-dev/input/raw_data/"
+  output_path: "s3://datalakebg-dev/output/res_output/"
+  logs_path: "s3://datalakebg-dev/logs/"
+
+glue:
+  job_name: "aws_glue_Script_1"
+  job_role_arn: "arn:aws:iam::151344518065:role/datalake_AWS_Glue"
+  glue_version: "4.0"
+  worker_type: "G.1X"
+  number_of_workers: 1
+  timeout: 5

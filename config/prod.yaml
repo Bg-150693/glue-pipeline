@@ -1,0 +1,26 @@
+# Production Environment Configuration
+environment: prod
+
+s3:
+  input_bucket: "datalakebg-prod"
+  input_path: "s3://datalakebg-prod/input/raw_data/"
+  output_path: "s3://datalakebg-prod/output/res_output/"
+  temp_path: "s3://datalakebg-prod/temp/"
+  logs_path: "s3://datalakebg-prod/logs/"
+
+glue:
+  job_name: "data-transformation-pipeline-prod"
+  worker_type: "G.2X"
+  number_of_workers: 3
+  timeout: 2880
+  max_retries: 2
+
+processing:
+  enable_profiling: false
+  enable_monitoring: true
+  batch_size: 10000
+
+error_handling:
+  enable_logging: true
+  log_level: "WARNING"
+  notify_on_failure: true

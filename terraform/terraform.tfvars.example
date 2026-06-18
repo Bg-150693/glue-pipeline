@@ -1,0 +1,21 @@
+# Example Terraform Variables File
+# Copy this to terraform.tfvars and fill in your values
+
+environment              = "dev"
+project_name             = "glue-pipeline"
+aws_region               = "us-east-1"
+glue_version             = "4.0"
+worker_type              = "G.2X"
+number_of_workers        = 2
+job_timeout              = 2880
+max_retries              = 1
+
+s3_input_bucket          = "datalakebg-dev"
+s3_output_bucket         = "datalakebg-output-dev"
+glue_service_role_arn    = "arn:aws:iam::ACCOUNT_ID:role/GlueServiceRole"
+
+tags = {
+  Environment = "dev"
+  Project     = "glue-pipeline"
+  Owner       = "bhagyashri"
+}

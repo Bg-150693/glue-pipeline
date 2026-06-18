@@ -1,0 +1,214 @@
+SIMPLIFIED AWS GLUE PIPELINE STRUCTURE
+══════════════════════════════════════════════════════════════════════════════
+
+📂 CURRENT PROJECT STRUCTURE
+──────────────────────────────────────────────────────────────────────────────
+
+my-public-repo/
+│
+├── 📁 scripts/
+│   └── aws_glue_Script_1.py          ← Main Glue job to deploy and execute
+│
+├── 📁 config/
+│   ├── config.yaml                   ← Base configuration
+│   ├── dev.yaml                      ← Development overrides
+│   └── prod.yaml                     ← Production overrides
+│
+├── 📁 terraform/
+│   ├── main.tf                       ← AWS Glue job resource definition
+│   ├── variables.tf                  ← Input variables
+│   ├── outputs.tf                    ← Output values
+│   └── terraform.tfvars.example      ← Example variables
+│
+├── 📁 .github/
+│   └── workflows/
+│       ├── tests.yml                 ← CI/CD testing
+│       └── deploy.yml                ← CI/CD deployment
+│
+├── 📁 logs/                          ← Job execution logs
+│
+├── requirements.txt                  ← Python dependencies
+├── README.md                         ← Documentation
+├── .gitignore                        ← Git ignore
+└── LICENSE                           ← MIT License
+
+
+KEY FILES EXPLAINED
+══════════════════════════════════════════════════════════════════════════════
+
+1️⃣  scripts/aws_glue_Script_1.py
+    Purpose: The main Glue job script
+    When used: Deployed to AWS and executed by Glue
+    What it does: Reads config, processes data, writes output
+
+
+2️⃣  config/config.yaml
+    Purpose: Base configuration shared by all environments
+    Example: Glue version, spark settings, error handling
+
+
+3️⃣  config/dev.yaml
+    Purpose: Development environment-specific overrides
+    Example: dev S3 buckets, fewer workers, shorter timeout
+
+
+4️⃣  config/prod.yaml
+    Purpose: Production environment-specific overrides
+    Example: prod S3 buckets, more workers, longer timeout
+
+
+5️⃣  terraform/main.tf
+    Purpose: Creates AWS Glue job and resources
+    When used: Once during terraform apply
+    Creates: AWS Glue Job, CloudWatch logs, S3 script upload
+
+
+6️⃣  terraform/variables.tf
+    Purpose: Defines input variables for Terraform
+    When used: terraform apply reads these
+
+
+7️⃣  terraform/outputs.tf
+    Purpose: Shows what resources were created
+    Output: Job name, ARN, log group, script location
+
+
+EXECUTION FLOW
+══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Deploy (One-time)
+────────────────────────────
+$ cd terraform
+$ terraform init
+$ terraform apply
+  ├─ Reads variables.tf
+  ├─ Creates AWS Glue Job
+  ├─ Uploads scripts/aws_glue_Script_1.py to S3
+  └─ Displays outputs.tf results
+
+
+STEP 2: Run (Repeating)
+────────────────────────────
+$ aws glue start-job-run --job-name glue-pipeline-dev
+  ├─ AWS Glue starts the job
+  ├─ Reads scripts/aws_glue_Script_1.py
+  ├─ Loads config/dev.yaml (for configuration)
+  ├─ Processes data from S3
+  └─ Writes output to S3
+
+
+CONFIGURATION HIERARCHY
+══════════════════════════════════════════════════════════════════════════════
+
+Base Config (config.yaml)
+        ↓
+Environment Override (config/dev.yaml or config/prod.yaml)
+        ↓
+Final Configuration Used by aws_glue_Script_1.py
+
+
+TERRAFORM FLOW
+══════════════════════════════════════════════════════════════════════════════
+
+variables.tf (Inputs)
+        ↓
+main.tf (Uses variables to create resources)
+        ↓
+outputs.tf (Shows created resources)
+
+
+EXAMPLE: Following One Variable
+══════════════════════════════════════════════════════════════════════════════
+
+variables.tf:
+  variable "environment" {
+    default = "dev"
+  }
+
+main.tf:
+  resource "aws_glue_job" "data_transformation" {
+    name = "${var.project_name}-${var.environment}"
+         # Uses: environment = "dev"
+         # Results in: "glue-pipeline-dev"
+  }
+
+outputs.tf:
+  output "glue_job_name" {
+    value = aws_glue_job.data_transformation.name
+           # Shows: "glue-pipeline-dev"
+  }
+
+
+SIMPLIFIED PROJECT STATS
+══════════════════════════════════════════════════════════════════════════════
+
+Core Files
+├── 1 Glue Job Script (scripts/aws_glue_Script_1.py)
+├── 3 Configuration Files (config.yaml, dev.yaml, prod.yaml)
+├── 4 Terraform Files (main.tf, variables.tf, outputs.tf, terraform.tfvars.example)
+├── 2 CI/CD Workflows (tests.yml, deploy.yml)
+└── 1 Main Documentation (README.md)
+
+Total: ~11 core files
+Package Size: Minimal, focused on production job
+
+
+WHAT CHANGED FROM OLD STRUCTURE
+══════════════════════════════════════════════════════════════════════════════
+
+REMOVED:
+  ✗ src/ folder (data_pipeline.py, transformations.py, config_loader.py, logger_config.py)
+  ✗ tests/ folder (test_transformations.py)
+  ✗ Deployment scripts (deploy_glue_job.py, run_glue_job.py)
+  ✗ Development files (setup.sh, setup.bat, Makefile, pyproject.toml)
+  ✗ Extra documentation files (QUICKSTART.md, ARCHITECTURE.md, etc.)
+
+KEPT:
+  ✓ scripts/ folder (now contains aws_glue_Script_1.py)
+  ✓ config/ folder (configuration files)
+  ✓ terraform/ folder (infrastructure as code)
+  ✓ .github/ folder (CI/CD workflows)
+  ✓ requirements.txt (Python dependencies)
+  ✓ README.md (Main documentation)
+
+
+DEPLOYMENT STEPS (NEW PROCESS)
+══════════════════════════════════════════════════════════════════════════════
+
+1. Update Configuration
+   Edit: config/dev.yaml or config/prod.yaml
+   Set: S3 paths, Glue settings
+
+2. Update Terraform Variables
+   Copy: terraform/terraform.tfvars.example → terraform/terraform.tfvars
+   Edit: AWS account ID, S3 buckets, IAM role
+
+3. Deploy Infrastructure
+   $ cd terraform
+   $ terraform init
+   $ terraform apply
+
+4. Run Job
+   $ aws glue start-job-run --job-name glue-pipeline-dev
+
+5. Monitor
+   $ aws logs tail /aws-glue/glue-pipeline-dev --follow
+
+
+QUICK REFERENCE
+══════════════════════════════════════════════════════════════════════════════
+
+Edit job logic → Edit: scripts/aws_glue_Script_1.py
+Change S3 paths → Edit: config/dev.yaml or config/prod.yaml
+Update AWS resources → Edit: terraform/main.tf and terraform/terraform.tfvars
+Create new job → Run: terraform apply
+Execute job → Run: aws glue start-job-run
+
+
+VERSION HISTORY
+══════════════════════════════════════════════════════════════════════════════
+
+v1.0 (Original): Full modular structure with src/, tests/, multiple scripts
+v2.0 (Current):  Simplified to single production job in scripts/ folder
+
+Generated: 2026-06-18

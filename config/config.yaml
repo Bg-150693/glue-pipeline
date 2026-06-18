@@ -1,0 +1,38 @@
+# AWS Glue Pipeline Configuration
+# Environment: dev, test, prod
+
+environment: dev
+
+# S3 Paths
+s3:
+  input_bucket: "datalakebg"
+  output_path: "s3://datalakebg/output/student/"
+  logs_path: "s3://datalakebg/logs/"
+
+
+# Glue Job Configuration
+glue:
+  job_name: "aws_glue_Script_1.py"
+  job_role_arn: "arn:aws:iam::151344518065:role/datalake_AWS_Glue"
+  glue_version: "4.0"
+  worker_type: "G.1X"
+  number_of_workers: 2
+  max_retries: 2
+  timeout: 5  # minutes
+  tags:
+    Environment: dev
+    Project: data-pipeline
+    Owner: bhagyashri
+
+# Spark Configuration
+spark:
+  sql_shuffle_partitions: 200
+  default_parallelism: 200
+  max_partition_bytes: 134217728  # 128 MB
+  shuffle_compress: true
+
+# Error Handling
+error_handling:
+  enable_logging: true
+  log_level: "INFO"
+  notify_on_failure: false
