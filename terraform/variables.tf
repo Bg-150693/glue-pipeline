@@ -12,6 +12,20 @@ variable "project_name" {
   default     = "aws_glue_Script_1"
 }
 
+# When you prefer explicit resources, set these two variables to the script
+# filenames you want deployed. Leave empty string to disable.
+variable "script_1" {
+  description = "First script filename to deploy (e.g. aws_glue_Script_1.py)"
+  type        = string
+  default     = "aws_glue_Script_1.py"
+}
+
+variable "script_2" {
+  description = "Second script filename to deploy (e.g. test.py). Empty = disabled"
+  type        = string
+  default     = "aws_glue_Script_2.py"
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -58,7 +72,7 @@ variable "s3_output_bucket" {
   type        = string
 }
 
-variable "glue_job_arn" {
+variable "glue_role_arn" {
   description = "IAM role ARN for Glue service"
   type        = string
 }

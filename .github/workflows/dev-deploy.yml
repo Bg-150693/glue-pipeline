@@ -32,10 +32,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Upload script to S3
+    - name: Upload scripts to S3
       run: |
-        aws s3 cp scripts/aws_glue_Script_1.py \
-          s3://${{ secrets.S3_OUTPUT_BUCKET }}/scripts/aws_glue_Script_1.py
+        # Sync all files in scripts/ to the S3 bucket scripts/ prefix
+        aws s3 sync scripts/ s3://${{ secrets.S3_OUTPUT_BUCKET }}/scripts/
     
     - name: Notify deployment
       if: always()
