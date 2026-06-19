@@ -1,4 +1,4 @@
-name: Deploy to AWS Dev
+name: Deploy to AWS QA
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: aws-development
+      name: aws-qa
     
     steps:
     - uses: actions/checkout@v3
@@ -43,15 +43,14 @@ jobs:
       with:
         script: |
           const status = '${{ job.status }}'
-          const message = `Glue Pipeline Dev Deployment: ${status.toUpperCase()}`
+          const message = `Glue Pipeline QA Deployment: ${status.toUpperCase()}`
           console.log(message)
-    
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: dev-deployed-${{ github.run_number }}
-        name: Dev Deployment ${{ github.run_number }}
+        tag_name: qa-deployed-${{ github.run_number }}
+        name: QA Deployment ${{ github.run_number }}
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GH_TOKEN }}
 
@@ -59,7 +58,7 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     environment:
-      name: aws-development
+      name: aws-qa
     
     steps:
     - uses: actions/checkout@v3
@@ -88,9 +87,9 @@ jobs:
           -var="s3_input_bucket=${{ secrets.S3_INPUT_BUCKET }}" \
           -var="s3_output_bucket=${{ secrets.S3_OUTPUT_BUCKET }}" \
           -var="glue_role_arn=${{ secrets.GLUE_ROLE_ARN }}" \
-          -var="environment=dev" || true
+          -var="environment=qa" || true
     
-    - name: Terraform Plan (Using config/dev.yaml)
+    - name: Terraform Plan (Using config/qa.yaml)
       working-directory: terraform
       run: |
         terraform plan \
@@ -98,7 +97,7 @@ jobs:
           -var="s3_input_bucket=${{ secrets.S3_INPUT_BUCKET }}" \
           -var="s3_output_bucket=${{ secrets.S3_OUTPUT_BUCKET }}" \
           -var="glue_role_arn=${{ secrets.GLUE_ROLE_ARN }}" \
-          -var="environment=dev" \
+          -var="environment=qa" \
           -out=tfplan
     
     - name: Terraform Apply
