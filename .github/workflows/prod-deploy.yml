@@ -79,6 +79,16 @@ jobs:
       working-directory: terraform
       run: terraform init
     
+    - name: Terraform Destroy (Remove Old Jobs)
+      working-directory: terraform
+      run: |
+        terraform destroy -auto-approve \
+          -var="aws_region=${{ secrets.AWS_REGION }}" \
+          -var="s3_input_bucket=${{ secrets.S3_INPUT_BUCKET }}" \
+          -var="s3_output_bucket=${{ secrets.S3_OUTPUT_BUCKET }}" \
+          -var="glue_role_arn=${{ secrets.GLUE_ROLE_ARN }}" \
+          -var="environment=prod" || true
+    
     - name: Terraform Plan (Using config/prod.yaml)
       working-directory: terraform
       run: |
