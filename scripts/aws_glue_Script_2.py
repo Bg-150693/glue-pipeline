@@ -2,7 +2,7 @@
 Run AWS Glue job and monitor execution
 """
 
-import boto3
+import boto3qWAEAWRE
 import time
 import argparse
 import sys
