@@ -47,7 +47,7 @@ variable "worker_type" {
 variable "number_of_workers" {
   description = "Number of workers"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "job_timeout" {
