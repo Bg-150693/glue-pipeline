@@ -1,0 +1,28 @@
+# QA Environment Configuration
+environment: qa
+
+s3:
+  input_bucket: "datalakebg-qa"
+  input_path: "s3://datalakebg-qa/input/raw_data/"
+  output_path: "s3://datalakebg-qa/output/res_output/"
+  temp_path: "s3://datalakebg-qa/temp/"
+  logs_path: "s3://datalakebg-qa/logs/"
+
+glue:
+  job_name: "aws_glue_Script_1"
+  job_role_arn: "arn:aws:iam::151344518065:role/datalake_AWS_Glue"
+  glue_version: "4.0"
+  worker_type: "G.1X"
+  number_of_workers: 2
+  max_retries: 1
+  timeout: 10
+
+processing:
+  enable_profiling: false
+  enable_monitoring: true
+  batch_size: 5000
+
+error_handling:
+  enable_logging: true
+  log_level: "INFO"
+  notify_on_failure: false

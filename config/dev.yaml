@@ -13,4 +13,5 @@ glue:
   glue_version: "4.0"
   worker_type: "G.1X"
   number_of_workers: 1
+  max_retries: 1
   timeout: 5

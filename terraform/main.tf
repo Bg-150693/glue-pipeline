@@ -1,4 +1,4 @@
-# AWS Glue Job Resource
+# AWS Glue Job Resource with Environment-Specific Configuration
 
 terraform {
   required_version = ">= 1.0"
@@ -14,10 +14,23 @@ provider "aws" {
   region = var.aws_region
 }
 
-## Explicit resources for two scripts (no loops).
-## Script blocks are created only when the corresponding variable is non-empty.
+# ========== READ ENVIRONMENT-SPECIFIC CONFIG FILE ==========
+locals {
+  config_file = "../config/${var.environment}.yaml"
+  config_data = yamldecode(file(local.config_file))
+  
+  # Extract values from config file (with fallbacks to variables)
+  glue_version          = try(local.config_data.glue.glue_version, var.glue_version)
+  worker_type           = try(local.config_data.glue.worker_type, var.worker_type)
+  number_of_workers     = try(local.config_data.glue.number_of_workers, var.number_of_workers)
+  job_timeout           = try(local.config_data.glue.timeout, var.job_timeout)
+  max_retries           = try(local.config_data.glue.max_retries, var.max_retries)
+  s3_input_path         = try(local.config_data.s3.input_path, "s3://${var.s3_input_bucket}/input/")
+  s3_output_path        = try(local.config_data.s3.output_path, "s3://${var.s3_output_bucket}/output/")
+  s3_logs_path          = try(local.config_data.s3.logs_path, "s3://${var.s3_output_bucket}/logs/")
+}
 
-# Script 1 upload
+# ========== SCRIPT 1 UPLOAD ==========
 resource "aws_s3_object" "glue_script_1" {
   bucket = var.s3_output_bucket
   key    = "scripts/aws_glue_Script_1.py"
@@ -25,16 +38,15 @@ resource "aws_s3_object" "glue_script_1" {
   tags   = var.tags
 }
 
-
-# Glue job for script 1
+# ========== GLUE JOB 1 (Uses config from dev.yaml, prod.yaml, etc.) ==========
 resource "aws_glue_job" "data_transformation_1" {
   name              = "${var.script_1}-${var.environment}"
   role_arn          = var.glue_role_arn
-  glue_version      = var.glue_version
-  worker_type       = var.worker_type
-  number_of_workers = var.number_of_workers
-  timeout           = var.job_timeout
-  max_retries       = var.max_retries
+  glue_version      = local.glue_version           # ← FROM CONFIG FILE
+  worker_type       = local.worker_type            # ← FROM CONFIG FILE
+  number_of_workers = local.number_of_workers      # ← FROM CONFIG FILE
+  timeout           = local.job_timeout            # ← FROM CONFIG FILE
+  max_retries       = local.max_retries            # ← FROM CONFIG FILE
 
   command {
     name            = "glueetl"
@@ -46,10 +58,10 @@ resource "aws_glue_job" "data_transformation_1" {
     "--job-bookmark-option"        = "job-bookmark-enable"
     "--enable-glue-datacatalog"    = "false"
     "--enable-spark-ui"            = "false"
-    "--spark-event-logs-path"      = "s3://${var.s3_output_bucket}/logs/"
+    "--spark-event-logs-path"      = local.s3_logs_path              # ← FROM CONFIG FILE
     "--TempDir"                    = "s3://${var.s3_output_bucket}/temp/"
-    "--S3_INPUT_PATH"              = "s3://${var.s3_input_bucket}/input/"
-    "--S3_OUTPUT_PATH"             = "s3://${var.s3_output_bucket}/output/"
+    "--S3_INPUT_PATH"              = local.s3_input_path             # ← FROM CONFIG FILE
+    "--S3_OUTPUT_PATH"             = local.s3_output_path            # ← FROM CONFIG FILE
   }
 
   execution_property {
@@ -61,7 +73,7 @@ resource "aws_glue_job" "data_transformation_1" {
   depends_on = [aws_s3_object.glue_script_1]
 }
 
-# Script 2 upload
+# ========== SCRIPT 2 UPLOAD ==========
 resource "aws_s3_object" "glue_script_2" {
   bucket = var.s3_output_bucket
   key    = "scripts/aws_glue_Script_2.py"
@@ -69,15 +81,15 @@ resource "aws_s3_object" "glue_script_2" {
   tags   = var.tags
 }
 
-# Glue job for script 2
+# ========== GLUE JOB 2 (Uses config from dev.yaml, prod.yaml, etc.) ==========
 resource "aws_glue_job" "data_transformation_2" {
   name              = "${var.script_2}-${var.environment}"
   role_arn          = var.glue_role_arn
-  glue_version      = var.glue_version
-  worker_type       = var.worker_type
-  number_of_workers = var.number_of_workers
-  timeout           = var.job_timeout
-  max_retries       = var.max_retries
+  glue_version      = local.glue_version           # ← FROM CONFIG FILE
+  worker_type       = local.worker_type            # ← FROM CONFIG FILE
+  number_of_workers = local.number_of_workers      # ← FROM CONFIG FILE
+  timeout           = local.job_timeout            # ← FROM CONFIG FILE
+  max_retries       = local.max_retries            # ← FROM CONFIG FILE
 
   command {
     name            = "glueetl"
@@ -89,10 +101,10 @@ resource "aws_glue_job" "data_transformation_2" {
     "--job-bookmark-option"        = "job-bookmark-enable"
     "--enable-glue-datacatalog"    = "false"
     "--enable-spark-ui"            = "false"
-    "--spark-event-logs-path"      = "s3://${var.s3_output_bucket}/logs/"
+    "--spark-event-logs-path"      = local.s3_logs_path              # ← FROM CONFIG FILE
     "--TempDir"                    = "s3://${var.s3_output_bucket}/temp/"
-    "--S3_INPUT_PATH"              = "s3://${var.s3_input_bucket}/input/"
-    "--S3_OUTPUT_PATH"             = "s3://${var.s3_output_bucket}/output/"
+    "--S3_INPUT_PATH"              = local.s3_input_path             # ← FROM CONFIG FILE
+    "--S3_OUTPUT_PATH"             = local.s3_output_path            # ← FROM CONFIG FILE
   }
 
   execution_property {
@@ -102,4 +114,19 @@ resource "aws_glue_job" "data_transformation_2" {
   tags = var.tags
 
   depends_on = [aws_s3_object.glue_script_2]
+}
+
+# ========== UPLOAD CONFIG FILES TO S3 ==========
+resource "aws_s3_object" "config_environment" {
+  bucket = var.s3_output_bucket
+  key    = "config/${var.environment}.yaml"
+  source = "../config/${var.environment}.yaml"
+  tags   = var.tags
+}
+
+resource "aws_s3_object" "config_base" {
+  bucket = var.s3_output_bucket
+  key    = "config/config.yaml"
+  source = "../config/config.yaml"
+  tags   = var.tags
 }
