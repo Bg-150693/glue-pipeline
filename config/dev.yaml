@@ -21,7 +21,7 @@ glue:
   job_name: "aws_glue_Script_2"
   job_role_arn: "arn:aws:iam::151344518065:role/datalake_AWS_Glue"
   glue_version: "4.0"
-  worker_type: "G.1X"
+  worker_type: "G.2X"
   number_of_workers: 6
   max_retries: 1
   timeout: 5
