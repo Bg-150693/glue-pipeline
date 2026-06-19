@@ -1,4 +1,18 @@
 # AWS Glue Job Resource with Environment-Specific Configuration
+#
+# IMPORTANT: If you get "IdempotentParameterMismatchException: Job already submitted with different configuration"
+# This means Glue jobs exist in AWS but Terraform state is out of sync.
+# 
+# SOLUTION: Import existing jobs into Terraform state first
+# Run these commands BEFORE applying:
+#   terraform import aws_glue_job.data_transformation_1 aws_glue_Script_1.py-dev
+#   terraform import aws_glue_job.data_transformation_2 aws_glue_Script_2.py-dev
+# (Replace 'dev' with your environment if different)
+#
+# Alternative: Refresh state and re-plan
+#   terraform refresh
+#   terraform plan
+#   terraform apply
 
 terraform {
   required_version = ">= 1.0"
@@ -71,6 +85,11 @@ resource "aws_glue_job" "data_transformation_1" {
   tags = var.tags
 
   depends_on = [aws_s3_object.glue_script_1]
+
+  # Lifecycle: Update in-place instead of recreate to avoid IdempotentParameterMismatchException
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # ========== SCRIPT 2 UPLOAD ==========
@@ -114,6 +133,11 @@ resource "aws_glue_job" "data_transformation_2" {
   tags = var.tags
 
   depends_on = [aws_s3_object.glue_script_2]
+
+  # Lifecycle: Update in-place instead of recreate to avoid IdempotentParameterMismatchException
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # ========== UPLOAD CONFIG FILES TO S3 ==========
